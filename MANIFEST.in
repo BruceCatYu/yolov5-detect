@@ -1,3 +1,8 @@
 include LICENSE
 include README.md
-recursive-include yolov5detect *
+include yolov5detect/__init__.py
+include yolov5detect/detect.py
+include yolov5detect/models/__init__.py
+include yolov5detect/models/common.py
+include yolov5detect/models/experimental.py
+include yolov5detect/models/yolo.py

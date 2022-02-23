@@ -9,8 +9,23 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Publish YOLOv5-detect to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          python-version: 3.6
+      - name: Installs and upgrades pip, installs other dependecies
+        run: |
+          # Upgrade pip
+          python3 -m pip install --upgrade pip
+          # Install build deps
+          python3 -m pip install build twine
+
+      - name: Publish YOLOv5-detect to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_REPOSITORY: yolov5-detect
+        run: |
+          python3 -m build
+          python3 -m twine upload dist/*
