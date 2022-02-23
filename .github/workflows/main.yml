@@ -25,7 +25,7 @@ jobs:
       - name: Publish YOLOv5-detect to PyPI
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.BANANA }}
         run: |
           python3 -m build
           python3 -m twine upload dist/*
