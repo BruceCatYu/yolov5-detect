@@ -1,5 +1,16 @@
-- name: Publish YOLOv5-detect to PyPI
-  uses: pypa/gh-action-pypi-publish@release/v1
-  with:
-    user: __token__
-    password: ${{ secrets.PYPI_API_TOKEN }}
+name: deploy
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Publish YOLOv5-detect to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
