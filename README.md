@@ -1,6 +1,6 @@
 # YOLOv5 detect
 
-🚀simple yolov5 wrapper for detect(torch script)  
+🚀simple yolov5 wrapper for detect(onnx, dnn)  
 
 ## Installation  
 ```bash
