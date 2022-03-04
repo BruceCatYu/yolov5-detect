@@ -94,9 +94,9 @@ def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
 
 
 class YoloDetect:
-    def __init__(self, weights: str, data: str, maxDetect: int, imageSize: list = [640, 640]) -> None:
+    def __init__(self, weights: str, data: str, maxDetect: int, imageSize: list = [640, 640], device: str = '') -> None:
         self.max_det = maxDetect  # maximum detections per image
-        self.device = select_device('cpu')
+        self.device = select_device(device)
         self.model = DetectMultiBackend(weights, device=self.device, data=data)
         self.stride, self.names = self.model.stride, self.model.names
         self.imgsz = check_img_size(

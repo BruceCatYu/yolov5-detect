@@ -1,6 +1,6 @@
-import cv2
 import yaml
 import torch
+import onnxruntime
 
 import numpy as np
 import torch.nn as nn
@@ -15,17 +15,24 @@ class DetectMultiBackend(nn.Module):
         if data:  # data.yaml path (optional)
             with open(data, errors='ignore') as f:
                 names = yaml.safe_load(f)['names']  # class names
-        net = cv2.dnn.readNetFromONNX(weights)
+        # net = cv2.dnn.readNetFromONNX(weights)
+
+        cuda = torch.cuda.is_available()
+        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider'] if cuda else [
+            'CPUExecutionProvider']
+        session = onnxruntime.InferenceSession(weights, providers=providers)
         self.__dict__.update(locals())  # assign all variables to self
 
-    def forward(self, im, val=False):
+    def forward(self, im):
         # YOLOv5 MultiBackend inference
         im = im.cpu().numpy()  # torch to numpy
-        self.net.setInput(im)
-        y = self.net.forward()
 
-        y = torch.tensor(y) if isinstance(y, np.ndarray) else y
-        return (y, []) if val else y
+        # self.net.setInput(im)
+        # y = self.net.forward()
+        y = self.session.run([self.session.get_outputs()[0].name], {
+                             self.session.get_inputs()[0].name: im})[0]
+
+        return torch.tensor(y) if isinstance(y, np.ndarray) else y
 
     def warmup(self, imgsz=(1, 3, 640, 640)):
         # Warmup model by running inference once
