@@ -2,7 +2,10 @@ include LICENSE
 include README.md
 include yolov5detect/__init__.py
 include yolov5detect/detect.py
+include yolov5detect/annotation.py
 include yolov5detect/models/__init__.py
-include yolov5detect/models/common.py
-include yolov5detect/models/experimental.py
-include yolov5detect/models/yolo.py
+include yolov5detect/models/backend.py
+include yolov5detect/utils/__init__.py
+include yolov5detect/utils/color.py
+include yolov5detect/utils/rectangle.py
+include yolov5detect/utils/vision.py
