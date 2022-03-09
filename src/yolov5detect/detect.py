@@ -1,11 +1,20 @@
 import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 import cv2
 import torch
 
 import numpy as np
 
-from .utils.vision import clip_coords, check_img_size, non_max_suppression
+from .utils.color import colors
+from .annotation import Annotator
+from .utils.rectangle import xyxy2xywh
+from deep_sort.deep_sort import DeepSort
 from .models.backend import DetectMultiBackend
+from .utils.vision import non_max_suppression,check_img_size,clip_coords
 
 
 def select_device(device='', batch_size=0):
@@ -133,3 +142,68 @@ class YoloDetect:
                 imgTorch.shape[2:], det[:, :4], image.shape).round()
             return det
         return []
+
+class YoloTrack:
+    def __init__(self, weights: str, data:str, maxDetect: int, imageSize: list = [640, 640], device: str = '') -> None:
+        self.device = select_device(device)
+        self.deepsort = DeepSort("osnet_x0_25",
+                                 self.device,
+                                 max_dist=0.2,
+                                 max_iou_distance=0.7,
+                                 max_age=30, n_init=3, nn_budget=100,
+                                 )
+        self.max_det = maxDetect  # maximum detections per image
+        self.model = DetectMultiBackend(weights, device=self.device,data=data)
+        self.stride, self.names = self.model.stride, self.model.names
+        self.imgsz = check_img_size(
+            imageSize, s=self.stride)  # check image size
+        # Run inference
+        self.model.warmup(imgsz=(1, 3, *self.imgsz))  # warmup
+
+    def get_names(self):
+        return self.names
+
+    def detect(self, image, conf_thres: float, iou_thres: float = 0.45):
+        img = letterbox(image, self.imgsz, stride=self.stride, auto=False)[0]
+
+        # Convert
+        img = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
+        img = np.ascontiguousarray(img)
+        imgTorch = torch.from_numpy(img).to(self.device)
+        imgTorch = imgTorch.float()  # uint8 to fp16/32
+        imgTorch /= 255.0  # 0 - 255 to 0.0 - 1.0
+        if imgTorch.ndimension() == 3:
+            imgTorch = imgTorch.unsqueeze(0)  # expand for batch dim
+        # Inference
+        pred = self.model(imgTorch)
+
+        # NMS
+        pred = non_max_suppression(
+            pred, conf_thres, iou_thres, None, False, max_det=self.max_det)
+
+        annotator = Annotator(image.copy(), line_width=2)
+        # Process predictions
+        det = pred[0]
+        if det is not None and len(det):
+            # Rescale boxes from img_size to im0 size
+            det[:, :4] = scale_coords(
+                imgTorch.shape[2:], det[:, :4], image.shape).round()
+                # add to string
+            xywhs = xyxy2xywh(det[:, 0:4])
+            confs = det[:, 4]
+            clss = det[:, 5]
+            outputs = self.deepsort.update(
+                xywhs.cpu(), confs.cpu(), clss.cpu(), image)
+            if len(outputs) > 0:
+                for j, (output, conf) in enumerate(zip(outputs, confs)):
+                    bboxes = output[0:4]
+                    id = output[4]
+                    cls = output[5]
+
+                    c = int(cls)
+                    label = f"{id} {self.names[c]} {conf:.2f}"
+                    annotator.box_label(bboxes, label, color=colors(c, True))
+        else:
+            self.deepsort.increment_ages()
+            print("no dete")
+        return annotator.result()
