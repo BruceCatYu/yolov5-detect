@@ -104,16 +104,21 @@ class Annotator:
                               1, cv2.LINE_AA)  # filled
                 cv2.putText(self.im, label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2), 0, self.lw / 3, txt_color,
                             thickness=tf, lineType=cv2.LINE_AA)
+        return np.asarray(self.im)
 
     def rectangle(self, xy, fill=None, outline=None, width=1):
         # Add rectangle to image (PIL-only)
         self.draw.rectangle(xy, fill, outline, width)
+
+        return np.asarray(self.im)
 
     def text(self, xy, text, txt_color=(255, 255, 255)):
         # Add text to image (PIL-only)
         w, h = self.font.getsize(text)  # text width, height
         self.draw.text((xy[0], xy[1] - h + 1), text,
                        fill=txt_color, font=self.font)
+
+        return np.asarray(self.im)
 
     def result(self):
         # Return annotated image as array

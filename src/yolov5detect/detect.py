@@ -11,7 +11,7 @@ import torch
 import numpy as np
 
 from .utils.rectangle import xyxy2xywh
-from deep_sort.deep_sort import DeepSort
+from .deep_sort.deep_sort import DeepSort
 from .models.backend import DetectMultiBackend
 from .utils.vision import non_max_suppression,check_img_size,clip_coords
 

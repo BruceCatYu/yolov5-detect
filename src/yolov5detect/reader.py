@@ -1,4 +1,8 @@
 import cv2
+import time
+
+from pathlib import Path
+from .annotation import Annotator
 
 
 class VideoReader:
@@ -20,3 +24,28 @@ class VideoReader:
 
     def release(self) -> None:
         self.cap.release()
+
+    def annotateTime(self, frame, sec):
+        return cv2.putText(frame.copy(), str(sec), (20, 20), thickness=2)
+
+    def saveFrame(self, output, showTime=True, generateName=lambda x: str(x)+".png", filter=lambda x: True, interval=10, winName="save frames"):
+        output = Path(output)
+        if not output.exists:
+            output.mkdir()
+
+        startTime = time.time()
+        i = 0
+        while self.cap.isOpened():
+            ret, frame = self.cap.read()
+            if ret is not True:
+                break
+            cv2.imshow(winName, Annotator(frame.copy(),line_width=2).text())
+            if filter(i):
+                cv2.imwrite(str(output/generateName(i)), frame)
+            i += 1
+
+            c = cv2.waitKey(interval)
+            if c == ord('q') or c == 27:
+                break
+        self.release()
+        cv2.destroyAllWindows()
