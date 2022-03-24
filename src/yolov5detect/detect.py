@@ -13,8 +13,7 @@ import numpy as np
 from .utils.rectangle import xyxy2xywh
 from .deep_sort.deep_sort import DeepSort
 from .models.backend import DetectMultiBackend
-from .utils.vision import non_max_suppression,check_img_size,clip_coords
-
+from .utils.vision import non_max_suppression, check_img_size, clip_coords
 
 def select_device(device='', batch_size=0):
     s = f'🚀 torch {torch.__version__} '  # string
@@ -115,7 +114,7 @@ class YoloDetect:
     def get_names(self):
         return self.names
 
-    def detect(self, image, conf_thres: float, iou_thres: float = 0.45):
+    def detect(self, image, conf_thres: float, iou_thres: float = 0.45, obj_num=-1):
         img = letterbox(image, self.imgsz, stride=self.stride, auto=False)[0]
 
         # Convert
@@ -139,6 +138,9 @@ class YoloDetect:
             # Rescale boxes from img_size to im0 size
             det[:, :4] = scale_coords(
                 imgTorch.shape[2:], det[:, :4], image.shape).round()
+            if obj_num > 0:
+                det = sorted(det, key=lambda x: x[4], reverse=True)
+                return det[:min(obj_num, len(det))]
             return det
         return []
 
