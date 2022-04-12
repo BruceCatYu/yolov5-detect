@@ -101,10 +101,10 @@ def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
 
 
 class YoloDetect:
-    def __init__(self, weights: str, data: str, maxDetect: int, imageSize: list = [640, 640], device: str = '') -> None:
+    def __init__(self, weights: str, data: str, maxDetect: int, imageSize: list = [640, 640], device: str = '', modelType: str = "onnx") -> None:
         self.max_det = maxDetect  # maximum detections per image
         self.device = select_device(device)
-        self.model = DetectMultiBackend(weights, device=self.device, data=data)
+        self.model = DetectMultiBackend(weights, device=self.device, data=data, type=modelType)
         self.stride, self.names = self.model.stride, self.model.names
         self.imgsz = check_img_size(
             imageSize, s=self.stride)  # check image size

@@ -1,6 +1,6 @@
 # YOLOv5 detect  
 
-🚀simple yolov5 wrapper for detect(onnx, dnn)  
+🚀simple yolov5 wrapper for detect(onnx, dnn, openvino)  
 
 ## Installation  
 ```bash
